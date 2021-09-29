@@ -9,7 +9,7 @@ public class AsynchronousOrderedBroker<T> extends Broker<T> {
 
     public AsynchronousOrderedBroker() {
         super();
-        queue = new BlockingQueue<>(1000); //Ques: What should be the size?
+        queue = new BlockingQueue<>(10000); //Ques: What should be the size?
         thread = new Thread(this::process);
         thread.start();
         this.running = true;
@@ -22,7 +22,7 @@ public class AsynchronousOrderedBroker<T> extends Broker<T> {
     @Override
     public void publish(T item) {
         if(running) {
-            this.queue.put(item);
+            queue.put(item);
         }
     }
 
@@ -30,8 +30,10 @@ public class AsynchronousOrderedBroker<T> extends Broker<T> {
      *
      */
     public void process() {
-        T item = queue.take();
-        super.publish(item);
+        while (running) {
+            T item = queue.take();
+            super.publish(item);
+        }
     }
 
     @Override

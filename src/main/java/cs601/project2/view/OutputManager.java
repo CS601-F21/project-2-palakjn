@@ -14,7 +14,7 @@ public class OutputManager {
      * @param fileLocation Absolute or relative location of the file.
      * @param line A string
      */
-    public void writeToFile(String fileLocation, String line) {
+    public static void writeToFile(String fileLocation, String line) {
 
         //Create if file doesn't exist and append to a file instead of overwriting the content.
         StandardOpenOption[] options = new StandardOpenOption[] {StandardOpenOption.CREATE, StandardOpenOption.APPEND};

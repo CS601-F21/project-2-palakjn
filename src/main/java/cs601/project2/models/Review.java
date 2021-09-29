@@ -3,7 +3,7 @@ package cs601.project2.models;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Reviews {
+public class Review {
 
     private String reviewerID;
     private String asin;
@@ -15,7 +15,7 @@ public class Reviews {
     private long unixReviewTime;
     private String reviewTime;
 
-    public Reviews() {
+    public Review() {
         helpful = new ArrayList<>();
     }
 
