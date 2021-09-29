@@ -30,8 +30,6 @@ public class BlockingQueue<T> {
         if(size == 1) {
             this.notifyAll();
         }
-
-        String name = Thread.currentThread().getName();
     }
 
     public synchronized T poll(long time) {

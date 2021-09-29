@@ -5,7 +5,7 @@ import cs601.project2.models.BlockingQueue;
 public class AsynchronousOrderedBroker<T> extends Broker<T> {
 
     private BlockingQueue<T> queue;
-    private Thread thread; //Ques: Do we need to use one thread or multiple threads?
+    private Thread thread;
 
     public AsynchronousOrderedBroker() {
         super();
@@ -30,14 +30,15 @@ public class AsynchronousOrderedBroker<T> extends Broker<T> {
      *
      */
     public void process() {
-        while (running) {
-            //Trying to get a new task within 2 minutes
+        T item = null;
 
-            T item = queue.poll(120000);
+        do {
+            item = queue.poll(1000); //Waiting for one second
+
             if(item != null) {
                 super.publish(item);
             }
-        }
+        } while (item != null);
     }
 
     @Override

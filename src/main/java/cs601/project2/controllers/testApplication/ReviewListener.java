@@ -17,6 +17,8 @@ public class ReviewListener extends Subscriber<Review> {
     private Constants.REVIEW_OPTION reviewOption;
     private List<Review> reviewList;
     private BufferedWriter bufferedWriter;
+    private int newReviewsCount;
+    private int oldReviewsCount;
 
     public ReviewListener(String fileLocation, Constants.REVIEW_OPTION reviewOption) throws IOException{
         this.fileLocation = fileLocation;
@@ -30,7 +32,7 @@ public class ReviewListener extends Subscriber<Review> {
     }
 
     @Override
-    public void onEvent(Review review) {
+    public synchronized void onEvent(Review review) {
         if(review == null) {
             //If reviews object is null then return
             return;
@@ -42,6 +44,13 @@ public class ReviewListener extends Subscriber<Review> {
             try{
                 bufferedWriter.write(review.getJson());
                 bufferedWriter.newLine();
+
+                if(reviewOption == Constants.REVIEW_OPTION.OLD) {
+                    oldReviewsCount++;
+                }
+                else {
+                    newReviewsCount++;
+                }
             }
             catch (IOException ioException) {
                 System.out.printf("Unable to write to a file %s. %s\n", fileLocation, ioException.getMessage());
@@ -52,5 +61,15 @@ public class ReviewListener extends Subscriber<Review> {
     @Override
     public void close() throws IOException {
         bufferedWriter.close();
+    }
+
+    @Override
+    public int getNewReviewCount() {
+        return newReviewsCount;
+    }
+
+    @Override
+    public int getOldReviewsCount() {
+        return oldReviewsCount;
     }
 }

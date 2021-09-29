@@ -8,4 +8,8 @@ public abstract class Subscriber<T> implements ISubscriber<T>, AutoCloseable {
     public void onEvent(T item) {
 
     }
+
+    public abstract int getNewReviewCount();
+
+    public abstract int getOldReviewsCount();
 }

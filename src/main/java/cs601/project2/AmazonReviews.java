@@ -15,7 +15,6 @@ import java.io.Reader;
 import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.concurrent.TimeUnit;
 
 public class AmazonReviews {
 
@@ -64,7 +63,7 @@ public class AmazonReviews {
 
                 long endTime = System.currentTimeMillis();
 
-                System.out.printf("Time took to publish all reviews: %d seconds.\n", TimeUnit.MILLISECONDS.toSeconds(endTime - startTime));
+                System.out.printf("Time took to publish all reviews: %d milliseconds. NewReviewCount: %d. OldReviewsCount: %d\n", endTime - startTime, newReviewListener.getNewReviewCount(), oldReviewListener.getOldReviewsCount());
             }
             catch (Exception exception) {
                 //Auto-closable block in ReviewListener requires catching java.lang.Exception
