@@ -31,8 +31,12 @@ public class AsynchronousOrderedBroker<T> extends Broker<T> {
      */
     public void process() {
         while (running) {
-            T item = queue.take();
-            super.publish(item);
+            //Trying to get a new task within 2 minutes
+
+            T item = queue.poll(120000);
+            if(item != null) {
+                super.publish(item);
+            }
         }
     }
 

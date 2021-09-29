@@ -2,7 +2,6 @@ package cs601.project2.controllers.testApplication;
 
 import cs601.project2.controllers.framework.implementation.Broker;
 import cs601.project2.models.Review;
-import cs601.project2.view.JsonManager;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -30,6 +29,7 @@ public class Reviewer {
                 Review review = JsonManager.fromJson(line);
 
                 if(review != null) {
+                    review.setJson(line);
                     reviewManager.publish(review);
                 }
 

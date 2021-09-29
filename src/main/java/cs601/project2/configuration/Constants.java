@@ -5,5 +5,12 @@ public class Constants {
         NEW,
         OLD
     }
+
+    public enum BROKER_OPTION {
+        SYNCHRONIZED_ORDERED,
+        ASYNCHRONIZED_ORDERED,
+        ASYNCHRONIZED_UNORDERED,
+        INVALID
+    }
 }
 

@@ -14,9 +14,18 @@ public class Review {
     private String summary;
     private long unixReviewTime;
     private String reviewTime;
+    private String json;
 
     public Review() {
         helpful = new ArrayList<>();
+    }
+
+    public void setJson(String line) {
+        json = line;
+    }
+
+    public String getJson() {
+        return json;
     }
 
     public boolean isOld() {

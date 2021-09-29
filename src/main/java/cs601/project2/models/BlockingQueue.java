@@ -34,10 +34,16 @@ public class BlockingQueue<T> {
         String name = Thread.currentThread().getName();
     }
 
-    public synchronized T take() {
+    public synchronized T poll(long time) {
         while(size == 0) {
             try {
-                this.wait();
+                //waiting for certain amount of time.
+                this.wait(time);
+
+                //If still the size is empty then returns null
+                if(size == 0) {
+                    return null;
+                }
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
