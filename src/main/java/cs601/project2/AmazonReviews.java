@@ -36,6 +36,9 @@ public class AmazonReviews {
 
         amazonReviews.filterReviewsByDate(reviewBroker);
 
+        oldReviewListener.flush();
+        newReviewListener.flush();
+
         long endTime = System.currentTimeMillis();
 
         System.out.printf("Time took to publish all reviews: %d seconds \n", TimeUnit.MILLISECONDS.toSeconds(endTime - startTime));
