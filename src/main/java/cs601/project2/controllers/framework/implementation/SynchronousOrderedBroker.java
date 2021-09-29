@@ -7,7 +7,7 @@ public class SynchronousOrderedBroker<T> extends Broker<T> {
     }
 
     @Override
-    public void publish(T item) {
+    public synchronized void publish(T item) {
         if(running) {
             super.publish(item);
         }

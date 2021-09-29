@@ -21,7 +21,24 @@ public class AmazonReviews {
     }
 
     public static void main(String[] args) {
+        //This is temporary just for testing
+        AmazonReviews amazonReviews = new AmazonReviews("Home_and_Kitchen_5.json", "Apps_for_Android_5.json");
 
+        Broker<Review> reviewBroker = new SynchronousOrderedBroker<>();
+
+        Subscriber<Review> oldReviewListener = new ReviewListener("OldReviews.txt", Constants.REVIEW_OPTION.OLD);
+        Subscriber<Review> newReviewListener = new ReviewListener("NewReviews.txt", Constants.REVIEW_OPTION.NEW);
+
+        reviewBroker.subscribe(oldReviewListener);
+        reviewBroker.subscribe(newReviewListener);
+
+        long startTime = System.currentTimeMillis();
+
+        amazonReviews.filterReviewsByDate(reviewBroker);
+
+        long endTime = System.currentTimeMillis();
+
+        System.out.printf("Time took to publish all reviews: %d seconds \n", TimeUnit.MILLISECONDS.toSeconds(endTime - startTime));
     }
 
     public void filterReviewsByDate(Broker<Review> reviewManager) {
