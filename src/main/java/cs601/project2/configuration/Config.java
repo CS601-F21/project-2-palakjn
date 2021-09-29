@@ -1,40 +1,56 @@
 package cs601.project2.configuration;
 
-import com.google.gson.annotations.SerializedName;
 import cs601.project2.utils.Strings;
 
+/**
+ * Configuration file holds the inputs to the program.
+ *
+ * @author Palak Jain
+ */
 public class Config {
 
-    @SerializedName(value = "input1")
     private String appliancesDatasetPath;
-
-    @SerializedName(value = "input2")
     private String appsDatasetPath;
-
-    @SerializedName(value = "newReviewsOutputFile")
     private String newReviewsPath;
-
-    @SerializedName(value = "oldReviewsOutputFile")
     private String oldReviewsPath;
-
     private String broker;
 
+    /**
+     * Get a file location of Home_And_Kitchen_5 review dataset
+     * @return file location
+     */
     public String getAppliancesDatasetPath() {
         return appliancesDatasetPath;
     }
 
+    /**
+     * Get a file location of Apps_for_Android_5 review dataset
+     * @return file location
+     */
     public String getAppsDatasetPath() {
         return appsDatasetPath;
     }
 
+    /**
+     * Get a file location where to write new reviews.
+     * @return file location
+     */
     public String getNewReviewsPath() {
         return newReviewsPath;
     }
 
+    /**
+     * Gets a file location where to write old reviews.
+     * @return
+     */
     public String getOldReviewsPath() {
         return oldReviewsPath;
     }
 
+    /**
+     * Get specific broker option to use for the run
+     * @return Broker option
+     */
     public Constants.BROKER_OPTION getBroker() {
 
         if(!Strings.isNullOrEmpty(broker)) {

@@ -1,9 +1,9 @@
 {
-  "input1": "Home_and_Kitchen_5.json",
-  "input2": "Apps_for_Android_5.json",
+  "appliancesDatasetPath": "Home_and_Kitchen_5.json",
+  "appsDatasetPath": "Apps_for_Android_5.json",
 
-  "newReviewsOutputFile": "NewReviews.json",
-  "oldReviewsOutputFile": "OldReviews.json",
+  "newReviewsPath": "NewReviews.json",
+  "oldReviewsPath": "OldReviews.json",
 
   "broker": "SynchronousOrderedBroker"
 }
