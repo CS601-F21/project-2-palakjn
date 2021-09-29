@@ -12,7 +12,7 @@ import cs601.project2.models.Subscribers;
 public class BrokerHandler<T> implements Broker<T> {
 
     private Subscribers<T> subscribers;
-    protected boolean running;
+    protected volatile boolean running;
 
     public BrokerHandler(){
         subscribers = new Subscribers<>();

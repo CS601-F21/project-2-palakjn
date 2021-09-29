@@ -80,4 +80,8 @@ public class BlockingQueue<T> {
 
         return item;
     }
+
+    public synchronized boolean isEmpty() {
+        return size == 0;
+    }
 }

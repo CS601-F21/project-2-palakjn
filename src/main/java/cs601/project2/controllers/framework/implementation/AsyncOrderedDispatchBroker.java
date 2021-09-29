@@ -37,17 +37,22 @@ public class AsyncOrderedDispatchBroker<T> extends BrokerHandler<T> {
      * Waiting for 1 second.
      */
     public void process() {
-        T item = null;
 
-        do {
-            //Waiting for one second for next item.
-            //Either case: if thread is being asked to shut down or thread taking time to insert new item to a queue.
-            item = queue.poll(1000);
+        while (running) {
+            T item = queue.poll(1000);
 
             if(item != null) {
                 super.publish(item);
             }
-        } while (item != null && running);
+        }
+
+        while (!queue.isEmpty()) {
+            T item = queue.poll(1000);
+
+            if(item != null) {
+                super.publish(item);
+            }
+        }
     }
 
     /**
