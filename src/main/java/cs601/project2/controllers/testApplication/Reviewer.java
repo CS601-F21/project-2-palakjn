@@ -1,6 +1,6 @@
 package cs601.project2.controllers.testApplication;
 
-import cs601.project2.controllers.framework.implementation.Broker;
+import cs601.project2.controllers.framework.implementation.BrokerHandler;
 import cs601.project2.models.Review;
 
 import java.io.BufferedReader;
@@ -11,16 +11,24 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
+/**
+ * Publish review to all subscribers.
+ *
+ * @author Palak Jain
+ */
 public class Reviewer {
 
-    private Broker<Review> reviewManager;
+    private BrokerHandler<Review> reviewManager;
     private String fileLocation;
 
-    public Reviewer(String fileLocation, Broker<Review> reviewManager) {
+    public Reviewer(String fileLocation, BrokerHandler<Review> reviewManager) {
         this.fileLocation = fileLocation;
         this.reviewManager = reviewManager;
     }
 
+    /**
+     * Reads file line by line and requests manager to publish review to all subscribers.
+     */
     public void read() {
         try(BufferedReader br = Files.newBufferedReader(Paths.get(fileLocation), StandardCharsets.ISO_8859_1)) {
             String line = br.readLine();
@@ -29,6 +37,7 @@ public class Reviewer {
                 Review review = JsonManager.fromJson(line);
 
                 if(review != null) {
+                    //Will send same json to subscriber to write to a file.
                     review.setJson(line);
                     reviewManager.publish(review);
                 }

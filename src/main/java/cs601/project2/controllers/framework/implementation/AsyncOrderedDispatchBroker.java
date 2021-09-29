@@ -2,14 +2,20 @@ package cs601.project2.controllers.framework.implementation;
 
 import cs601.project2.models.BlockingQueue;
 
-public class AsynchronousOrderedBroker<T> extends Broker<T> {
+/**
+ * Asynchronously publishing items in an order to Subscribers.
+ *
+ * @author Palak Jain
+ * @param <T>
+ */
+public class AsyncOrderedDispatchBroker<T> extends BrokerHandler<T> {
 
     private BlockingQueue<T> queue;
     private Thread thread;
 
-    public AsynchronousOrderedBroker() {
+    public AsyncOrderedDispatchBroker() {
         super();
-        queue = new BlockingQueue<>(10000); //Ques: What should be the size?
+        queue = new BlockingQueue<>(10000);
         thread = new Thread(this::process);
         thread.start();
         this.running = true;
@@ -17,7 +23,7 @@ public class AsynchronousOrderedBroker<T> extends Broker<T> {
 
     /**
      * Adding an item to the blocking queue and will return to the caller immediately
-     * @param item An item to be published to all the subscribers.
+     * @param item An item to publish to all the subscribers.
      */
     @Override
     public void publish(T item) {
@@ -27,20 +33,26 @@ public class AsynchronousOrderedBroker<T> extends Broker<T> {
     }
 
     /**
-     *
+     * Publish next available item in a queue.
+     * Waiting for 1 second.
      */
     public void process() {
         T item = null;
 
         do {
-            item = queue.poll(1000); //Waiting for one second
+            //Waiting for one second for next item.
+            //Either case: if thread is being asked to shut down or thread taking time to insert new item to a queue.
+            item = queue.poll(1000);
 
             if(item != null) {
                 super.publish(item);
             }
-        } while (item != null);
+        } while (item != null && running);
     }
 
+    /**
+     * Not accepting new items and waiting for thread to finish existing tasks.
+     */
     @Override
     public void shutdown() {
         super.shutdown();

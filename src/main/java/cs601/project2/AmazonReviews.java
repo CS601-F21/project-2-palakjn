@@ -16,6 +16,12 @@ import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
+/**
+ * Reads Home_And_Kitchen_5 and Apps_for_Android_5 reviews and filter both reviews by date to find out
+ * which reviews are old or new.
+ *
+ * @author Palak Jain
+ */
 public class AmazonReviews {
 
     private Config configuration;
@@ -42,16 +48,20 @@ public class AmazonReviews {
         }
     }
 
+    /**
+     * Creates subscribers and filter reviews by Unix Timestamp
+     */
     public void processReviews() {
-        Broker<Review> reviewManager = getBroker();
+        BrokerHandler<Review> reviewManager = getBroker();
 
         if(reviewManager != null) {
+            SubscribeHandler<Review> oldReviewListener = null;
+            SubscribeHandler<Review> newReviewListener = null;
 
-            try (
-                 //Creating two subscribers
-                 Subscriber<Review> oldReviewListener = new ReviewListener(configuration.getOldReviewsPath(), Constants.REVIEW_OPTION.OLD);
-                 Subscriber<Review> newReviewListener = new ReviewListener(configuration.getNewReviewsPath(), Constants.REVIEW_OPTION.NEW);
-                 ) {
+            try {
+                //Creating two subscribers
+                oldReviewListener = new ReviewListener(configuration.getOldReviewsPath(), Constants.REVIEW_OPTION.OLD);
+                newReviewListener = new ReviewListener(configuration.getNewReviewsPath(), Constants.REVIEW_OPTION.NEW);
 
                 //Subscribes both subscribers
                 reviewManager.subscribe(oldReviewListener);
@@ -63,19 +73,31 @@ public class AmazonReviews {
 
                 long endTime = System.currentTimeMillis();
 
-                System.out.printf("Time took to publish all reviews: %d milliseconds. NewReviewCount: %d. OldReviewsCount: %d\n", endTime - startTime, newReviewListener.getNewReviewCount(), oldReviewListener.getOldReviewsCount());
+                System.out.printf("Time took to publish all reviews: %d milliseconds.\n", endTime - startTime);
             }
-            catch (Exception exception) {
-                //Auto-closable block in ReviewListener requires catching java.lang.Exception
+            catch (IOException exception) {
                 StringWriter writer = new StringWriter();
                 exception.printStackTrace(new PrintWriter(writer));
 
                 System.out.printf("An issue occurred while creating subscribers. %s. \n", writer);
             }
+            finally {
+                if(oldReviewListener != null) {
+                    oldReviewListener.close();
+                }
+
+                if(newReviewListener != null) {
+                    newReviewListener.close();
+                }
+            }
         }
     }
 
-    public void filterReviewsByUnix(Broker<Review> reviewManager) {
+    /**
+     * Spawns two threads to read reviews from file and publish to all subscribers.
+     * @param reviewManager Broker object to use for publishing reviews.
+     */
+    public void filterReviewsByUnix(BrokerHandler<Review> reviewManager) {
         //Creating two publishers
         Reviewer appliancesReviewer = new Reviewer(configuration.getAppliancesDatasetPath(), reviewManager);
         Reviewer appsReviewer = new Reviewer(configuration.getAppsDatasetPath(), reviewManager);
@@ -89,6 +111,7 @@ public class AmazonReviews {
         thread2.start();
 
         try {
+            //Waiting for threads to complete a task
             thread1.join();
             thread2.join();
             reviewManager.shutdown();
@@ -101,13 +124,17 @@ public class AmazonReviews {
         }
     }
 
+    /**
+     * Read comment line arguments and return the location of the configuration file.
+     * @param args Command line arguments being passed when running a program
+     * @return location of configuration file if passed arguments are valid else null
+     */
     public String getConfig(String[] args) {
         String configFileLocation = null;
 
         if(args.length == 2 &&
                 args[0].equalsIgnoreCase("-config") &&
-                !args[1].isEmpty() &&
-                !args[1].isBlank()) {
+                !Strings.isNullOrEmpty(args[1])) {
             configFileLocation = args[1];
         }
         else {
@@ -117,6 +144,10 @@ public class AmazonReviews {
         return configFileLocation;
     }
 
+    /**
+     * Parse configuration file.
+     * @param configFileLocation location of configuration file
+     */
     public void readConfig(String configFileLocation) {
         try (Reader reader = Files.newBufferedReader(Paths.get(configFileLocation))){
             Gson gson = new Gson();
@@ -131,6 +162,10 @@ public class AmazonReviews {
         }
     }
 
+    /**
+     * Verifies if the config has all the values which is needed and files exist at a given locations.
+     * @return true if valid else false
+     */
     public boolean verifyConfig() {
         boolean flag = false;
 
@@ -165,15 +200,19 @@ public class AmazonReviews {
         return flag;
     }
 
-    public Broker<Review> getBroker() {
+    /**
+     * Get specific broker object based on the configuration file
+     * @return Broker object
+     */
+    public BrokerHandler<Review> getBroker() {
         if(configuration.getBroker() == Constants.BROKER_OPTION.SYNCHRONIZED_ORDERED) {
-            return new SynchronousOrderedBroker<>();
+            return new SynchronousOrderedBrokerHandler<>();
         }
         else if(configuration.getBroker() == Constants.BROKER_OPTION.ASYNCHRONIZED_ORDERED) {
-            return new AsynchronousOrderedBroker<>();
+            return new AsyncOrderedDispatchBroker<>();
         }
         else if(configuration.getBroker() == Constants.BROKER_OPTION.ASYNCHRONIZED_UNORDERED) {
-            return new AsynchronousUnorderedBroker<>();
+            return new AsyncUnorderedDispatchBroker<>();
         }
 
         return null;

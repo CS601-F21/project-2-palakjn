@@ -1,6 +1,6 @@
 package cs601.project2.models;
 
-import cs601.project2.controllers.framework.implementation.Subscriber;
+import cs601.project2.controllers.framework.implementation.SubscribeHandler;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,37 +13,37 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * @author Palak Jain
  */
 public class Subscribers<T> {
-    private List<Subscriber<T>> subscribers;
+    private List<SubscribeHandler<T>> subscribeHandlers;
     private ReentrantReadWriteLock lock;
 
     public Subscribers(){
-        this.subscribers = new ArrayList<>();
+        this.subscribeHandlers = new ArrayList<>();
         this.lock = new ReentrantReadWriteLock();
     }
 
     /**
-     * Adding subscriber to the list.
-     * @param subscriber The one who wants to subscribe.
+     * Adding subscribeHandler to the list.
+     * @param subscribeHandler The one who wants to subscribe.
      */
-    public void add(Subscriber<T> subscriber) {
+    public void add(SubscribeHandler<T> subscribeHandler) {
         this.lock.writeLock().lock();
 
         try {
-            this.subscribers.add(subscriber);
+            this.subscribeHandlers.add(subscribeHandler);
         } finally {
             this.lock.writeLock().unlock();
         }
     }
 
     /**
-     * Gets the total number of subscribers.
+     * Gets the total number of subscribeHandlers.
      * @return size of an array
      */
     public int size() {
         this.lock.readLock().lock();
 
         try {
-            return this.subscribers.size();
+            return this.subscribeHandlers.size();
         } finally {
             this.lock.readLock().unlock();
         }
@@ -52,14 +52,14 @@ public class Subscribers<T> {
     /**
      * Gets the subscriber object at a given index
      * @param index location of an item in an array
-     * @return Subscriber object if a given index is less than the size of an array else null
+     * @return SubscribeHandler object if a given index is less than the size of an array else null
      */
-    public Subscriber<T> get(int index) {
+    public SubscribeHandler<T> get(int index) {
         this.lock.readLock().lock();
 
         try {
-            if(index < this.subscribers.size()) {
-                return subscribers.get(index);
+            if(index < this.subscribeHandlers.size()) {
+                return subscribeHandlers.get(index);
             }
             else {
                 return null;

@@ -4,23 +4,36 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-public class AsynchronousUnorderedBroker<T> extends Broker<T> {
+/**
+ * Asynchronously publishing items to all subscribers without ensuring an order.
+ *
+ * @author Palak Jain
+ * @param <T>
+ */
+public class AsyncUnorderedDispatchBroker<T> extends BrokerHandler<T> {
 
     private ExecutorService threadPool;
 
-    public AsynchronousUnorderedBroker() {
+    public AsyncUnorderedDispatchBroker() {
         this.threadPool = Executors.newFixedThreadPool(30);
     }
 
+    /**
+     * Adding an item to a queue for ThreadPool to publish next.
+     * @param item An item to publish to all the subscribers.
+     */
     @Override
     public void publish(T item) {
         if(!running) {
             //Not accepting new items
             return;
         }
-        threadPool.execute(() -> AsynchronousUnorderedBroker.super.publish(item));
+        threadPool.execute(() -> AsyncUnorderedDispatchBroker.super.publish(item));
     }
 
+    /**
+     * Not accepting new items and waiting for threadPool to shut down existing tasks.
+     */
     @Override
     public void shutdown() {
         super.shutdown();

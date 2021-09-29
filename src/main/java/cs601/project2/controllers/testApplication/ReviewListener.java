@@ -1,7 +1,7 @@
 package cs601.project2.controllers.testApplication;
 
 import cs601.project2.configuration.Constants;
-import cs601.project2.controllers.framework.implementation.Subscriber;
+import cs601.project2.controllers.framework.implementation.SubscribeHandler;
 import cs601.project2.models.Review;
 
 import java.io.BufferedWriter;
@@ -12,18 +12,22 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ReviewListener extends Subscriber<Review> {
+/**
+ * A subscriber who listens for a review to write to a file from a publisher.
+ *
+ * @author Palak Jain
+ */
+public class ReviewListener extends SubscribeHandler<Review> {
     private String fileLocation;
     private Constants.REVIEW_OPTION reviewOption;
     private List<Review> reviewList;
     private BufferedWriter bufferedWriter;
-    private int newReviewsCount;
-    private int oldReviewsCount;
 
     public ReviewListener(String fileLocation, Constants.REVIEW_OPTION reviewOption) throws IOException{
         this.fileLocation = fileLocation;
         this.reviewOption = reviewOption;
         this.reviewList = new ArrayList<>();
+        //Deleting file if already exists
         if(Files.exists(Paths.get(fileLocation))) {
             Files.delete(Paths.get(fileLocation));
         }
@@ -31,6 +35,11 @@ public class ReviewListener extends Subscriber<Review> {
         this.bufferedWriter = Files.newBufferedWriter(Paths.get(fileLocation), StandardCharsets.ISO_8859_1);
     }
 
+    /**
+     * Writing reviews based on whether it is a new or old review to a file.
+     *
+     * @param review Review object to write to a file
+     */
     @Override
     public synchronized void onEvent(Review review) {
         if(review == null) {
@@ -44,13 +53,6 @@ public class ReviewListener extends Subscriber<Review> {
             try{
                 bufferedWriter.write(review.getJson());
                 bufferedWriter.newLine();
-
-                if(reviewOption == Constants.REVIEW_OPTION.OLD) {
-                    oldReviewsCount++;
-                }
-                else {
-                    newReviewsCount++;
-                }
             }
             catch (IOException ioException) {
                 System.out.printf("Unable to write to a file %s. %s\n", fileLocation, ioException.getMessage());
@@ -58,18 +60,15 @@ public class ReviewListener extends Subscriber<Review> {
         }
     }
 
-    @Override
-    public void close() throws IOException {
-        bufferedWriter.close();
-    }
-
-    @Override
-    public int getNewReviewCount() {
-        return newReviewsCount;
-    }
-
-    @Override
-    public int getOldReviewsCount() {
-        return oldReviewsCount;
+    /**
+     * Closing BufferedWriter Instance.
+     */
+    public void close() {
+        try {
+            bufferedWriter.close();
+        }
+        catch (IOException ioException) {
+            System.out.printf("Unable to write to a file %s. %s\n", fileLocation, ioException.getMessage());
+        }
     }
 }
