@@ -19,5 +19,16 @@ public class Constants {
     }
 
     public static final int MAX_UNIX_TIMESTAMP = 1362268800;
+    public static final String IPADDRESS = "localhost";
+    public static final int CONNECTION_PORT = 3032;
+    public static final int MESSAGE_PORT = 3034;
+
+    public static class MESSAGES {
+        public static final String SUBSCRIBED = "Subscribed!";
+        public static final String INVALID_REQUEST = "Invalid request. Try Again!";
+        public static final String SUBSCRIBE_REQUEST = "Subscribe";
+        public static final String END_TOKEN = "EOT";
+        public static final String RECEIVED = "Received!";
+    }
 }
 

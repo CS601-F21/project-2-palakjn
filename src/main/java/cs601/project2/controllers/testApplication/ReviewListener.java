@@ -9,8 +9,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * A subscriber who listens for a review to write to a file from a publisher.
@@ -20,13 +18,11 @@ import java.util.List;
 public class ReviewListener extends SubscribeHandler<Review> {
     private String fileLocation;
     private Constants.REVIEW_OPTION reviewOption;
-    private List<Review> reviewList;
     private BufferedWriter bufferedWriter;
 
     public ReviewListener(String fileLocation, Constants.REVIEW_OPTION reviewOption) throws IOException{
         this.fileLocation = fileLocation;
         this.reviewOption = reviewOption;
-        this.reviewList = new ArrayList<>();
         //Deleting file if already exists
         if(Files.exists(Paths.get(fileLocation))) {
             Files.delete(Paths.get(fileLocation));
@@ -41,7 +37,7 @@ public class ReviewListener extends SubscribeHandler<Review> {
      * @param review Review object to write to a file
      */
     @Override
-    public synchronized void onEvent(Review review) {
+    public void onEvent(Review review) {
         if(review == null) {
             //If reviews object is null then return
             return;

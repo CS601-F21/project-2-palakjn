@@ -67,9 +67,16 @@ public class AmazonReviews {
                 reviewManager.subscribe(oldReviewListener);
                 reviewManager.subscribe(newReviewListener);
 
+                //Create a thread: Thread thread = new Thread();
+                //thread.run(() <- remoteServer.acceptRemoteSubscribers(reviewManager))
+                //Start the thread: thread.run()
+
                 long startTime = System.currentTimeMillis();
 
                 filterReviewsByUnix(reviewManager);
+
+                //wait for remoteServer thread to finish
+                //remoteServer.close() <-- sent closeConnection request to all the clients
 
                 long endTime = System.currentTimeMillis();
 
@@ -89,6 +96,8 @@ public class AmazonReviews {
                 if(newReviewListener != null) {
                     newReviewListener.close();
                 }
+
+                //close
             }
         }
     }
