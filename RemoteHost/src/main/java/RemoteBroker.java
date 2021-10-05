@@ -94,6 +94,7 @@ public class RemoteBroker {
                     System.out.println("Connected!");
                 }
                 catch (IOException ioException) {
+                    //TODO: Sleep for sometime
                 }
             }
             while (socket == null);

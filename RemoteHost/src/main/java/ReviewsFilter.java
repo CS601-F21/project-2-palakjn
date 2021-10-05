@@ -12,11 +12,11 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Map;
 
-public class AmazonReviews {
+public class ReviewsFilter {
     private Map<String, String> configuration;
 
     public static void main(String[] args) {
-        AmazonReviews amazonReviews = new AmazonReviews();
+        ReviewsFilter amazonReviews = new ReviewsFilter();
 
         //Getting configuration file
         String configFileLocation = amazonReviews.getConfig(args);

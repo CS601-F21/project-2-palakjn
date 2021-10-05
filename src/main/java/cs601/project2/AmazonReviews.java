@@ -7,7 +7,6 @@ import cs601.project2.controllers.framework.implementation.*;
 import cs601.project2.controllers.remote.RemoteServer;
 import cs601.project2.controllers.testApplication.ReviewListener;
 import cs601.project2.controllers.testApplication.Reviewer;
-import cs601.project2.models.Review;
 import cs601.project2.utils.Strings;
 
 import java.io.IOException;
