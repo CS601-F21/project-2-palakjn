@@ -60,12 +60,14 @@ public class AsyncOrderedDispatchBroker<T> extends BrokerHandler<T> {
      */
     @Override
     public void shutdown() {
-        super.shutdown();
+        running = false;
 
         try {
             thread.join();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+
+        super.shutdown();
     }
 }

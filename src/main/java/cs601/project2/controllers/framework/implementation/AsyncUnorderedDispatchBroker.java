@@ -36,7 +36,7 @@ public class AsyncUnorderedDispatchBroker<T> extends BrokerHandler<T> {
      */
     @Override
     public void shutdown() {
-        super.shutdown();
+        running = false;
 
         threadPool.shutdown();
 
@@ -47,5 +47,7 @@ public class AsyncUnorderedDispatchBroker<T> extends BrokerHandler<T> {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+
+        super.shutdown();
     }
 }

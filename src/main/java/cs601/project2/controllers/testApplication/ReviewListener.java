@@ -1,6 +1,5 @@
 package cs601.project2.controllers.testApplication;
 
-import com.google.gson.Gson;
 import cs601.project2.configuration.Constants;
 import cs601.project2.controllers.framework.implementation.SubscribeHandler;
 import cs601.project2.models.Review;
@@ -47,11 +46,11 @@ public class ReviewListener extends SubscribeHandler<String> {
             return;
         }
 
-        Gson gson = new Gson();
-        Review review = gson.fromJson(json, Review.class);
+        Review review = JsonManager.fromJson(json);
 
-        if((reviewOption == Constants.REVIEW_OPTION.NEW && review.isNew()) ||
-                reviewOption == Constants.REVIEW_OPTION.OLD && review.isOld()) {
+        if(review != null &&
+                ((reviewOption == Constants.REVIEW_OPTION.NEW && review.isNew()) ||
+                    reviewOption == Constants.REVIEW_OPTION.OLD && review.isOld())) {
 
             try{
                 bufferedWriter.write(json);

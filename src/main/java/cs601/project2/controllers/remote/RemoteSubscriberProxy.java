@@ -2,7 +2,6 @@ package cs601.project2.controllers.remote;
 
 import cs601.project2.configuration.Constants;
 import cs601.project2.controllers.framework.implementation.SubscribeHandler;
-import cs601.project2.models.Review;
 import cs601.project2.utils.Strings;
 
 import java.io.BufferedReader;
@@ -11,6 +10,11 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 
+/**
+ * Subscriber receives event from publisher and send to the remote Subscriber.
+ *
+ * @author Palak Jain
+ */
 public class RemoteSubscriberProxy extends SubscribeHandler<String> {
     private String ipAddress;
     private int port;
@@ -23,27 +27,23 @@ public class RemoteSubscriberProxy extends SubscribeHandler<String> {
         this.port = port;
     }
 
+    /**
+     * Send json file to remote subscriber
+     * @param json String in JSON format
+     */
     @Override
     public synchronized void onEvent(String json) {
         if(socket == null) {
-            try {
-                this.socket = new Socket(ipAddress, port);
-                this.inStream = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                this.outStream = new PrintWriter(socket.getOutputStream(), true);
-            }
-            catch(IOException exception) {
-                System.out.printf("Exception occurred while connecting to a server %s:%s. %s.\n", ipAddress, port, exception);
-            }
+            //Only making connection one time to the client
+            connect();
         }
 
-        if(socket.isConnected()) {
+        if(socket != null && socket.isConnected()) {
             try  {
                 outStream.println(json);
 
                 String line = inStream.readLine();
-                if (!Strings.isNullOrEmpty(line) && line.equalsIgnoreCase(Constants.MESSAGES.RECEIVED)) {
-                    //System.out.println("Client received the message");
-                } else {
+                if (Strings.isNullOrEmpty(line) && line.equalsIgnoreCase(Constants.MESSAGES.RECEIVED)) {
                     System.out.println("Client didn't receive the message.");
                 }
             } catch (IOException ioException) {
@@ -52,6 +52,9 @@ public class RemoteSubscriberProxy extends SubscribeHandler<String> {
         }
     }
 
+    /**
+     * Closing the connection with the client.
+     */
     @Override
     public void close() {
         try {
@@ -61,6 +64,43 @@ public class RemoteSubscriberProxy extends SubscribeHandler<String> {
         }
         catch (IOException ioException) {
             System.out.printf("Error occurred while closing the socket and input/output streams. %s", ioException);
+        }
+    }
+
+    /**
+     * Tries to connect to a server one time.
+     * Will re-try the connection until the server is not up.
+     */
+    private void connect() {
+        do {
+            try {
+                this.socket = new Socket(ipAddress, port);
+            }
+            catch (IOException ioException) {
+                System.out.println("Sleeping for one second");
+                sleep(1000);
+            }
+        } while (socket == null);
+
+        try {
+            this.inStream = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            this.outStream = new PrintWriter(socket.getOutputStream(), true);
+        }
+        catch(IOException exception) {
+            System.out.printf("Exception occurred while connecting to a server %s:%s. %s.\n", ipAddress, port, exception);
+        }
+    }
+
+    /**
+     * Causes the currently executing thread to sleep for the specified number of milliseconds
+     * @param milliseconds the length of time to sleep in milliseconds
+     */
+    private void sleep(long milliseconds) {
+        try {
+            Thread.sleep(milliseconds);
+        }
+        catch (InterruptedException exception) {
+            System.out.printf("Fail to sleep for %d time. %s.\n", milliseconds, exception);
         }
     }
 }

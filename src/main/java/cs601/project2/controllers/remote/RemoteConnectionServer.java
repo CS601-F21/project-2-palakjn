@@ -3,7 +3,6 @@ package cs601.project2.controllers.remote;
 import cs601.project2.configuration.Constants;
 import cs601.project2.controllers.framework.implementation.BrokerHandler;
 import cs601.project2.controllers.framework.implementation.SubscribeHandler;
-import cs601.project2.models.Review;
 import cs601.project2.utils.Strings;
 
 import java.io.*;
@@ -13,25 +12,33 @@ import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class RemoteServer {
+/**
+ * Waits for the connection from remote host and if received subscribe the host as a new subscriber to the broker.
+ *
+ * @author Palak Jain
+ */
+public class RemoteConnectionServer {
     private volatile boolean running;
     private List<String> clients;
     private BrokerHandler<String> reviewManager;
     private Socket remoteConnectionListener;
     private ServerSocket serverSocket = null;
 
-    public RemoteServer(BrokerHandler<String> reviewManager) {
+    public RemoteConnectionServer(BrokerHandler<String> reviewManager) {
         running = true;
         clients = new ArrayList<>();
         this.reviewManager = reviewManager;
     }
 
+    /**
+     * Add remote subscribers to the broker.
+     */
     public void addRemoteSubscribers() {
         try {
             serverSocket = new ServerSocket(Constants.CONNECTION_PORT);
         }
         catch (IOException ioException) {
-            System.out.println("Fail to create server socket object. "+ ioException.getMessage());
+            System.out.println("Fail to create server socket object. " + ioException.getMessage());
 
             return;
         }
@@ -40,9 +47,7 @@ public class RemoteServer {
             //Will continue to look for all the clients who wish to receive the messages until close connection is not instantiated.
 
             try {
-                System.out.println("Waiting for connections");
                 remoteConnectionListener = serverSocket.accept();
-                System.out.println("Received!");
             }
             catch (IOException ioException) {
                 System.out.printf("Interruption happen while waiting for connections from remote host. %s.\n", ioException);
@@ -59,19 +64,20 @@ public class RemoteServer {
 
                 String line = inStream.readLine();
 
-                System.out.printf("Request body: %s. \n", line);
-
                 boolean isValid = verifyRequest(line);
 
                 if (isValid) {
-                    System.out.println("Received request is valid");
                     String[] reqParts = line.trim().split(" ");
                     ipAddress = reqParts[1];
                     port = reqParts[2];
 
+                    //Add all clients IPAddress which will be useful when closing the connections
                     clients.add(ipAddress);
 
+                    //Creating a local subscriber object
                     SubscribeHandler<String> subscriberProxy = new RemoteSubscriberProxy(ipAddress, Integer.parseInt(port));
+
+                    //Subscribe the subscriber to the broker
                     reviewManager.subscribe(subscriberProxy);
 
                     System.out.printf("Subscribed host with IPAddress %s and port %s. \n", ipAddress, port);
@@ -80,6 +86,7 @@ public class RemoteServer {
                     outputMessage = Constants.MESSAGES.INVALID_REQUEST;
                 }
 
+                //Send a message to the server.
                 outStream.println(outputMessage);
             }
             catch (IOException ioException) {
@@ -93,6 +100,13 @@ public class RemoteServer {
         }
     }
 
+    /**
+     * Verify if the received request is correct. Request should
+     *  1) not be null or empty
+     *  2) have three words starting with "Subscribe"
+     * @param request request received from client
+     * @return true if valid else false
+     */
     public boolean verifyRequest(String request) {
         boolean isValid = false;
 
@@ -112,10 +126,15 @@ public class RemoteServer {
         return isValid;
     }
 
+    /**
+     * Close all the connections with all the clients.
+     * Clients will not receive the messages from the server.
+     */
     public void close() {
         running = false;
 
         try {
+            //After closing the socket, thread will wake up from the socket.accept() call and then will exit the loop
             serverSocket.close();
             remoteConnectionListener.close();
         }
@@ -142,7 +161,7 @@ public class RemoteServer {
                 }
             }
             catch(IOException ioException) {
-                System.out.printf("Fail to close the connection with the host. %s:%s. %s.\n", client, Constants.CONNECTION_PORT, ioException);
+                System.out.printf("Fail to close the connection with the host. %s:%s. %s.\n", client, Constants.DISCONNECTION_PORT, ioException);
             }
         }
     }

@@ -12,11 +12,16 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Map;
 
-public class ReviewsFilter {
+/**
+ * A remote Host subscribes to receive events from remote server and publish events to local subscribers.
+ *
+ * @author Palak Jain
+ */
+public class ReviewProcessor {
     private Map<String, String> configuration;
 
     public static void main(String[] args) {
-        ReviewsFilter amazonReviews = new ReviewsFilter();
+        ReviewProcessor amazonReviews = new ReviewProcessor();
 
         //Getting configuration file
         String configFileLocation = amazonReviews.getConfig(args);
@@ -34,6 +39,9 @@ public class ReviewsFilter {
         }
     }
 
+    /**
+     * Creates local subscribers, connect to a remote server for all reviews
+     */
     public void filterReviews() {
         RemoteBroker remoteBroker = new RemoteBroker();
 
@@ -44,13 +52,19 @@ public class ReviewsFilter {
             oldReviewListener = new ReviewListener(configuration.get("oldReviewsPath"), Constants.REVIEW_OPTION.OLD);
             newReviewListener = new ReviewListener(configuration.get("newReviewsPath"), Constants.REVIEW_OPTION.NEW);
 
+            //Subscribe local subscribers for receiving reviews from remote host.
             remoteBroker.subscribe(oldReviewListener);
             remoteBroker.subscribe(newReviewListener);
 
+            long startTime = System.currentTimeMillis();
+
+            //Connect to the server.
             boolean isConnected = remoteBroker.connectToServer();
 
             if(isConnected) {
+                //Creates a thread which will wait for publishers to publish an item.
                 Thread thread1 = new Thread(remoteBroker::publish);
+                //Creates a thread which will check if a close connection request received from server.
                 Thread thread2 = new Thread(remoteBroker::close);
                 thread1.start();
                 thread2.start();
@@ -67,6 +81,10 @@ public class ReviewsFilter {
                     System.out.printf("Interruption happen while waiting for threads to finish all the tasks. %s. \n", writer);
                 }
             }
+
+            long endTime = System.currentTimeMillis();
+
+            System.out.printf("Time took to write down all reviews in remote host: %d milliseconds.\n", endTime - startTime);
         }
         catch (IOException exception) {
             StringWriter writer = new StringWriter();
@@ -75,6 +93,7 @@ public class ReviewsFilter {
             System.out.printf("An issue occurred while creating subscribers. %s. \n", writer);
         }
         finally {
+            //Closing the subscribers
             if(oldReviewListener != null) {
                 oldReviewListener.close();
             }

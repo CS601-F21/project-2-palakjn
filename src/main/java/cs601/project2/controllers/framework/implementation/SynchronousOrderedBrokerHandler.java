@@ -22,4 +22,11 @@ public class SynchronousOrderedBrokerHandler<T> extends BrokerHandler<T> {
             super.publish(item);
         }
     }
+
+    @Override
+    public void shutdown() {
+        running = false;
+
+        super.shutdown();
+    }
 }

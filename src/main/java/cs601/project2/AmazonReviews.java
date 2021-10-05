@@ -4,7 +4,7 @@ import com.google.gson.Gson;
 import cs601.project2.configuration.Config;
 import cs601.project2.configuration.Constants;
 import cs601.project2.controllers.framework.implementation.*;
-import cs601.project2.controllers.remote.RemoteServer;
+import cs601.project2.controllers.remote.RemoteConnectionServer;
 import cs601.project2.controllers.testApplication.ReviewListener;
 import cs601.project2.controllers.testApplication.Reviewer;
 import cs601.project2.utils.Strings;
@@ -55,20 +55,18 @@ public class AmazonReviews {
         BrokerHandler<String> reviewManager = getBroker();
 
         if(reviewManager != null) {
-            SubscribeHandler<String> oldReviewListener = null;
-            SubscribeHandler<String> newReviewListener = null;
 
             try {
                 //Creating two subscribers
-                oldReviewListener = new ReviewListener(configuration.getOldReviewsPath(), Constants.REVIEW_OPTION.OLD);
-                newReviewListener = new ReviewListener(configuration.getNewReviewsPath(), Constants.REVIEW_OPTION.NEW);
+                SubscribeHandler<String> oldReviewListener = new ReviewListener(configuration.getOldReviewsPath(), Constants.REVIEW_OPTION.OLD);
+                SubscribeHandler<String> newReviewListener = new ReviewListener(configuration.getNewReviewsPath(), Constants.REVIEW_OPTION.NEW);
 
                 //Subscribes both subscribers
                 reviewManager.subscribe(oldReviewListener);
                 reviewManager.subscribe(newReviewListener);
 
                 //Creating one thread which will look for remote subscribers
-                RemoteServer remoteServer = new RemoteServer(reviewManager);
+                RemoteConnectionServer remoteServer = new RemoteConnectionServer(reviewManager);
                 Thread thread = new Thread(remoteServer::addRemoteSubscribers);
                 thread.start();
 
@@ -76,12 +74,10 @@ public class AmazonReviews {
                 filterReviewsByUnix(reviewManager);
 
                 //Closing the connection with remote server
-                System.out.println("Closing connection");
                 remoteServer.close();
 
                 try {
-                    //Waiting for threads to complete a task
-                    System.out.println("Waiting for thread to finish");
+                    //Waiting for thread to complete a task
                     thread.join();
                 }
                 catch (InterruptedException exception) {
@@ -100,15 +96,6 @@ public class AmazonReviews {
                 exception.printStackTrace(new PrintWriter(writer));
 
                 System.out.printf("An issue occurred while creating subscribers. %s. \n", writer);
-            }
-            finally {
-                if(oldReviewListener != null) {
-                    oldReviewListener.close();
-                }
-
-                if(newReviewListener != null) {
-                    newReviewListener.close();
-                }
             }
         }
     }

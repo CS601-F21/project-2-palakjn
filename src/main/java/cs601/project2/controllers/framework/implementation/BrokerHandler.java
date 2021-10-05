@@ -53,6 +53,15 @@ public class BrokerHandler<T> implements Broker<T> {
      */
     @Override
     public void shutdown() {
-        this.running = false;
+        //Closing all the subscribers.
+        int numOfSubscribers = subscribers.size();
+
+        for(int i = 0; i < numOfSubscribers; i++) {
+            SubscribeHandler<T> subscribeHandler = subscribers.get(i);
+
+            if(subscribeHandler != null) {
+                subscribeHandler.close();
+            }
+        }
     }
 }
