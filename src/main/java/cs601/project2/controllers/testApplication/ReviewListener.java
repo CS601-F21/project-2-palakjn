@@ -6,6 +6,8 @@ import cs601.project2.models.Review;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -51,7 +53,10 @@ public class ReviewListener extends SubscribeHandler<Review> {
                 bufferedWriter.newLine();
             }
             catch (IOException ioException) {
-                System.out.printf("Unable to write to a file %s. %s\n", fileLocation, ioException.getMessage());
+                StringWriter writer = new StringWriter();
+                ioException.printStackTrace(new PrintWriter(writer));
+
+                System.out.printf("Unable to write to a file %s. %s\n", fileLocation, writer);
             }
         }
     }

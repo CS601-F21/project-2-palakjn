@@ -7,23 +7,25 @@ import cs601.project2.models.Review;
 import cs601.project2.utils.Strings;
 
 import java.io.*;
-import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 public class RemoteServer {
     private volatile boolean running;
-    private Map<String, Integer> clients;
+    private List<String> clients;
+    private BrokerHandler<Review> reviewManager;
+    private Socket remoteConnectionListener;
 
-    public RemoteServer() {
+    public RemoteServer(BrokerHandler<Review> reviewManager) {
         running = true;
-        clients = new HashMap<>();
+        clients = new ArrayList<>();
+        this.reviewManager = reviewManager;
     }
 
-    public void addRemoteSubscribers(BrokerHandler<Review> reviewManager) {
+    public void addRemoteSubscribers() {
         ServerSocket serverSocket = null;
         try {
             serverSocket = new ServerSocket(Constants.CONNECTION_PORT);
@@ -37,17 +39,28 @@ public class RemoteServer {
         while (running) {
             //Will continue to look for all the clients who wish to receive the messages until close connection is not instantiated.
 
+            try {
+                System.out.println("Waiting for connections");
+                remoteConnectionListener = serverSocket.accept();
+                System.out.println("Received!");
+            }
+            catch (IOException ioException) {
+                System.out.printf("Interruption happen while waiting for connections from remote host. %s", ioException);
+                break;
+            }
+
             try (
-                Socket socket = serverSocket.accept();
-                BufferedReader inStream = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                PrintWriter outStream = new PrintWriter(socket.getOutputStream(), true)
+                BufferedReader inStream = new BufferedReader(new InputStreamReader(remoteConnectionListener.getInputStream()));
+                PrintWriter outStream = new PrintWriter(remoteConnectionListener.getOutputStream(), true)
                 ) {
-                System.out.println("One request for making connection received!");
                 String ipAddress;
                 String port;
                 String outputMessage;
 
                 String line = inStream.readLine();
+
+                System.out.printf("Request body: %s. \n", line);
+
                 boolean isValid = verifyRequest(line);
 
                 if (isValid) {
@@ -56,7 +69,7 @@ public class RemoteServer {
                     ipAddress = reqParts[1];
                     port = reqParts[2];
 
-                    clients.put(ipAddress, ((InetSocketAddress) socket.getRemoteSocketAddress()).getPort());
+                    clients.add(ipAddress);
 
                     SubscribeHandler<Review> subscriberProxy = new RemoteSubscriberProxy(ipAddress, Integer.parseInt(port));
                     reviewManager.subscribe(subscriberProxy);
@@ -83,13 +96,13 @@ public class RemoteServer {
     public boolean verifyRequest(String request) {
         boolean isValid = false;
 
-        if(!Strings.isNullOrEmpty(request)) {
+        if(Strings.isNullOrEmpty(request)) {
             System.out.println("Received request is empty.");
         }
         else {
             String[] reqParts = request.trim().split(" ");
-            if(reqParts.length != 3 || reqParts[0].equalsIgnoreCase(Constants.MESSAGES.SUBSCRIBE_REQUEST)) {
-                System.out.printf("Invalid request. %s", request);
+            if(reqParts.length != 3 || !reqParts[0].equalsIgnoreCase(Constants.MESSAGES.SUBSCRIBE_REQUEST)) {
+                System.out.printf("Invalid request. %s.\n", request);
             }
             else {
                 isValid = true;
@@ -102,8 +115,34 @@ public class RemoteServer {
     public void close() {
         running = false;
 
-        for (Map.Entry<String, Integer> entry : clients.entrySet()) {
+        try {
+            remoteConnectionListener.close();
+        }
+        catch (IOException ioException) {
+            System.out.printf("Error while closing the remote connection. %s", ioException);
+        }
 
+        for (String client : clients) {
+
+            try (
+                Socket socket = new Socket(client, Constants.DISCONNECTION_PORT);
+                BufferedReader inStream = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                PrintWriter outStream = new PrintWriter(socket.getOutputStream(), true);
+            ) {
+                outStream.println(Constants.MESSAGES.CLOSE_REQUEST);
+
+                String line = inStream.readLine();
+
+                if(!Strings.isNullOrEmpty(line) && line.equalsIgnoreCase(Constants.MESSAGES.CLOSE_RESPONSE)) {
+                    System.out.printf("Closed the connection with the host with IpAddress %s", client);
+                }
+                else {
+                    System.out.println("Fail to close the connection with the host.");
+                }
+            }
+            catch(IOException ioException) {
+                System.out.printf("Fail to close the connection with the host. %s:%s. %s.\n", client, Constants.CONNECTION_PORT, ioException);
+            }
         }
     }
 }

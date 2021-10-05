@@ -14,55 +14,54 @@ import java.net.Socket;
 public class RemoteSubscriberProxy extends SubscribeHandler<Review> {
     private String ipAddress;
     private int port;
-//    private Socket socket;
-//    private BufferedReader inStream;
-//    private PrintWriter outStream;
+    private Socket socket;
+    private BufferedReader inStream;
+    private PrintWriter outStream;
 
     public RemoteSubscriberProxy(String ipAddress, int port) {
         this.ipAddress = ipAddress;
         this.port = port;
-//        try {
-//            this.socket = new Socket(ipAddress, port);
-//            this.inStream = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-//            this.outStream = new PrintWriter(socket.getOutputStream(), true);
-//        }
-//        catch(IOException exception) {
-//            System.out.printf("Exception occurred while connecting to a server %s:%s. %s.\n", ipAddress, port, exception);
-//        }
     }
 
     @Override
     public synchronized void onEvent(Review review) {
-        try (
-            Socket socket = new Socket(ipAddress, port);
-            BufferedReader inStream = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            PrintWriter outStream = new PrintWriter(socket.getOutputStream(), true)
-            ) {
-            outStream.println(review.getJson());
-            outStream.println(Constants.MESSAGES.END_TOKEN);
-
-            String line = inStream.readLine();
-            if(!Strings.isNullOrEmpty(line) && line.equalsIgnoreCase(Constants.MESSAGES.RECEIVED)) {
-                System.out.println("Client received the message");
+        if(socket == null) {
+            try {
+                this.socket = new Socket(ipAddress, port);
+                this.inStream = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                this.outStream = new PrintWriter(socket.getOutputStream(), true);
             }
-            else {
-                System.out.println("Client didn't receive the message.");
+            catch(IOException exception) {
+                System.out.printf("Exception occurred while connecting to a server %s:%s. %s.\n", ipAddress, port, exception);
             }
         }
-        catch (IOException ioException) {
-            System.out.printf("Failure while sending message to client: %s:%s. %s \n", ipAddress, port, ioException);
+
+        if(socket.isConnected()) {
+            try  {
+                outStream.println(review.getJson());
+                outStream.println(Constants.MESSAGES.END_TOKEN);
+
+                String line = inStream.readLine();
+                if (!Strings.isNullOrEmpty(line) && line.equalsIgnoreCase(Constants.MESSAGES.RECEIVED)) {
+                    //System.out.println("Client received the message");
+                } else {
+                    System.out.println("Client didn't receive the message.");
+                }
+            } catch (IOException ioException) {
+                System.out.printf("Failure while sending message to client: %s:%s. %s \n", ipAddress, port, ioException);
+            }
         }
     }
 
     @Override
     public void close() {
-//        try {
-//            socket.close();
-//            inStream.close();
-//            outStream.close();
-//        }
-//        catch (IOException ioException) {
-//            System.out.printf("Error occurred while closing the socket and input/output streams. %s", ioException);
-//        }
+        try {
+            socket.close();
+            inStream.close();
+            outStream.close();
+        }
+        catch (IOException ioException) {
+            System.out.printf("Error occurred while closing the socket and input/output streams. %s", ioException);
+        }
     }
 }

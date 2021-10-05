@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import cs601.project2.configuration.Config;
 import cs601.project2.configuration.Constants;
 import cs601.project2.controllers.framework.implementation.*;
+import cs601.project2.controllers.remote.RemoteServer;
 import cs601.project2.controllers.testApplication.ReviewListener;
 import cs601.project2.controllers.testApplication.Reviewer;
 import cs601.project2.models.Review;
@@ -67,16 +68,28 @@ public class AmazonReviews {
                 reviewManager.subscribe(oldReviewListener);
                 reviewManager.subscribe(newReviewListener);
 
-                //Create a thread: Thread thread = new Thread();
-                //thread.run(() <- remoteServer.acceptRemoteSubscribers(reviewManager))
-                //Start the thread: thread.run()
+                //Creating one thread which will look for remote subscribers
+                RemoteServer remoteServer = new RemoteServer(reviewManager);
+                Thread thread = new Thread(remoteServer::addRemoteSubscribers);
+                thread.start();
 
                 long startTime = System.currentTimeMillis();
-
                 filterReviewsByUnix(reviewManager);
 
-                //wait for remoteServer thread to finish
-                //remoteServer.close() <-- sent closeConnection request to all the clients
+                //Closing the connection with remote server
+                System.out.println("Closing connection");
+                remoteServer.close();
+
+                try {
+                    //Waiting for threads to complete a task
+                    thread.join();
+                }
+                catch (InterruptedException exception) {
+                    StringWriter writer = new StringWriter();
+                    exception.printStackTrace(new PrintWriter(writer));
+
+                    System.out.printf("Interruption happen while waiting for threads to finish all the tasks. %s. \n", writer);
+                }
 
                 long endTime = System.currentTimeMillis();
 
@@ -96,8 +109,6 @@ public class AmazonReviews {
                 if(newReviewListener != null) {
                     newReviewListener.close();
                 }
-
-                //close
             }
         }
     }
