@@ -11,7 +11,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 
-public class RemoteSubscriberProxy extends SubscribeHandler<Review> {
+public class RemoteSubscriberProxy extends SubscribeHandler<String> {
     private String ipAddress;
     private int port;
     private Socket socket;
@@ -24,7 +24,7 @@ public class RemoteSubscriberProxy extends SubscribeHandler<Review> {
     }
 
     @Override
-    public synchronized void onEvent(Review review) {
+    public synchronized void onEvent(String json) {
         if(socket == null) {
             try {
                 this.socket = new Socket(ipAddress, port);
@@ -38,8 +38,7 @@ public class RemoteSubscriberProxy extends SubscribeHandler<Review> {
 
         if(socket.isConnected()) {
             try  {
-                outStream.println(review.getJson());
-                outStream.println(Constants.MESSAGES.END_TOKEN);
+                outStream.println(json);
 
                 String line = inStream.readLine();
                 if (!Strings.isNullOrEmpty(line) && line.equalsIgnoreCase(Constants.MESSAGES.RECEIVED)) {

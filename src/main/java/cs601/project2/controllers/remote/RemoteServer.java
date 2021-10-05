@@ -16,17 +16,17 @@ import java.util.List;
 public class RemoteServer {
     private volatile boolean running;
     private List<String> clients;
-    private BrokerHandler<Review> reviewManager;
+    private BrokerHandler<String> reviewManager;
     private Socket remoteConnectionListener;
+    private ServerSocket serverSocket = null;
 
-    public RemoteServer(BrokerHandler<Review> reviewManager) {
+    public RemoteServer(BrokerHandler<String> reviewManager) {
         running = true;
         clients = new ArrayList<>();
         this.reviewManager = reviewManager;
     }
 
     public void addRemoteSubscribers() {
-        ServerSocket serverSocket = null;
         try {
             serverSocket = new ServerSocket(Constants.CONNECTION_PORT);
         }
@@ -45,7 +45,7 @@ public class RemoteServer {
                 System.out.println("Received!");
             }
             catch (IOException ioException) {
-                System.out.printf("Interruption happen while waiting for connections from remote host. %s", ioException);
+                System.out.printf("Interruption happen while waiting for connections from remote host. %s.\n", ioException);
                 break;
             }
 
@@ -71,7 +71,7 @@ public class RemoteServer {
 
                     clients.add(ipAddress);
 
-                    SubscribeHandler<Review> subscriberProxy = new RemoteSubscriberProxy(ipAddress, Integer.parseInt(port));
+                    SubscribeHandler<String> subscriberProxy = new RemoteSubscriberProxy(ipAddress, Integer.parseInt(port));
                     reviewManager.subscribe(subscriberProxy);
 
                     System.out.printf("Subscribed host with IPAddress %s and port %s. \n", ipAddress, port);
@@ -116,10 +116,11 @@ public class RemoteServer {
         running = false;
 
         try {
+            serverSocket.close();
             remoteConnectionListener.close();
         }
         catch (IOException ioException) {
-            System.out.printf("Error while closing the remote connection. %s", ioException);
+            System.out.printf("Error while closing the remote connection. %s.\n", ioException);
         }
 
         for (String client : clients) {
@@ -134,7 +135,7 @@ public class RemoteServer {
                 String line = inStream.readLine();
 
                 if(!Strings.isNullOrEmpty(line) && line.equalsIgnoreCase(Constants.MESSAGES.CLOSE_RESPONSE)) {
-                    System.out.printf("Closed the connection with the host with IpAddress %s", client);
+                    System.out.printf("Closed the connection with the host with IpAddress %s. \n", client);
                 }
                 else {
                     System.out.println("Fail to close the connection with the host.");

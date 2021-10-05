@@ -13,7 +13,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 public class RemoteBroker {
-    private Subscribers<Review> subscribers;
+    private Subscribers<String> subscribers;
     private volatile boolean isConnected;
     private Socket eventReceiver;
 
@@ -46,19 +46,10 @@ public class RemoteBroker {
 
         while (isConnected) {
             try {
-                String json = "";
-                String line = inStream.readLine();
-
-                while (!Strings.isNullOrEmpty(line) && !line.trim().equals(Constants.MESSAGES.END_TOKEN)) {
-                    json = String.format("%s%s", json, line);
-                    line = inStream.readLine();
-                }
+                String json = inStream.readLine();
 
                 if(!Strings.isNullOrEmpty(json)) {
-                    Review review = JsonManager.fromJson(json);
-                    review.setJson(json);
-
-                    publish(review);
+                    publish(json);
 
                     outStream.println(Constants.MESSAGES.RECEIVED);
                 }
@@ -73,11 +64,11 @@ public class RemoteBroker {
         }
     }
 
-    public void publish(Review review)  {
+    public void publish(String review)  {
         int numOfSubscribers = subscribers.size();
 
         for(int i = 0; i < numOfSubscribers; i++) {
-            SubscribeHandler<Review> subscribeHandler = subscribers.get(i);
+            SubscribeHandler<String> subscribeHandler = subscribers.get(i);
 
             if(subscribeHandler != null) {
                 subscribeHandler.onEvent(review);
@@ -85,7 +76,7 @@ public class RemoteBroker {
         }
     }
 
-    public void subscribe(SubscribeHandler<Review> subscriber) {
+    public void subscribe(SubscribeHandler<String> subscriber) {
         subscribers.add(subscriber);
     }
 
@@ -156,7 +147,6 @@ public class RemoteBroker {
             String line = inStream.readLine();
 
             if(!Strings.isNullOrEmpty(line) && line.trim().equalsIgnoreCase(Constants.MESSAGES.CLOSE_REQUEST)) {
-                System.out.println("Sending disconnection request");
 
                 outStream.println(Constants.MESSAGES.CLOSE_RESPONSE);
                 isConnected = false;

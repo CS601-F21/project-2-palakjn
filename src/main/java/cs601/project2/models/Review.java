@@ -21,26 +21,9 @@ public class Review {
     private String summary;
     private long unixReviewTime;
     private String reviewTime;
-    private String json;
 
     public Review() {
         helpful = new ArrayList<>();
-    }
-
-    /**
-     * Setting JSON of the review object.
-     * @param line String in JSON format
-     */
-    public void setJson(String line) {
-        json = line;
-    }
-
-    /**
-     * Gets JSON representation of the object
-     * @return A string in JSON format
-     */
-    public String getJson() {
-        return json;
     }
 
     /**

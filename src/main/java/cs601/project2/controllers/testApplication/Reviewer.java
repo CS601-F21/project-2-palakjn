@@ -18,10 +18,10 @@ import java.nio.file.Paths;
  */
 public class Reviewer {
 
-    private BrokerHandler<Review> reviewManager;
+    private BrokerHandler<String> reviewManager;
     private String fileLocation;
 
-    public Reviewer(String fileLocation, BrokerHandler<Review> reviewManager) {
+    public Reviewer(String fileLocation, BrokerHandler<String> reviewManager) {
         this.fileLocation = fileLocation;
         this.reviewManager = reviewManager;
     }
@@ -34,14 +34,7 @@ public class Reviewer {
             String line = br.readLine();
 
             while (line != null) {
-                Review review = JsonManager.fromJson(line);
-
-                if(review != null) {
-                    //Will send same json to subscriber to write to a file.
-                    review.setJson(line);
-                    reviewManager.publish(review);
-                }
-
+                reviewManager.publish(line);
                 line = br.readLine();
             }
         }

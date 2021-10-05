@@ -53,11 +53,11 @@ public class AmazonReviews {
      * Creates subscribers and filter reviews by Unix Timestamp
      */
     public void processReviews() {
-        BrokerHandler<Review> reviewManager = getBroker();
+        BrokerHandler<String> reviewManager = getBroker();
 
         if(reviewManager != null) {
-            SubscribeHandler<Review> oldReviewListener = null;
-            SubscribeHandler<Review> newReviewListener = null;
+            SubscribeHandler<String> oldReviewListener = null;
+            SubscribeHandler<String> newReviewListener = null;
 
             try {
                 //Creating two subscribers
@@ -82,6 +82,7 @@ public class AmazonReviews {
 
                 try {
                     //Waiting for threads to complete a task
+                    System.out.println("Waiting for thread to finish");
                     thread.join();
                 }
                 catch (InterruptedException exception) {
@@ -117,7 +118,7 @@ public class AmazonReviews {
      * Spawns two threads to read reviews from file and publish to all subscribers.
      * @param reviewManager Broker object to use for publishing reviews.
      */
-    public void filterReviewsByUnix(BrokerHandler<Review> reviewManager) {
+    public void filterReviewsByUnix(BrokerHandler<String> reviewManager) {
         //Creating two publishers
         Reviewer appliancesReviewer = new Reviewer(configuration.getAppliancesDatasetPath(), reviewManager);
         Reviewer appsReviewer = new Reviewer(configuration.getAppsDatasetPath(), reviewManager);
@@ -224,7 +225,7 @@ public class AmazonReviews {
      * Get specific broker object based on the configuration file
      * @return Broker object
      */
-    public BrokerHandler<Review> getBroker() {
+    public BrokerHandler<String> getBroker() {
         if(configuration.getBroker() == Constants.BROKER_OPTION.SYNCHRONIZED_ORDERED) {
             return new SynchronousOrderedBrokerHandler<>();
         }

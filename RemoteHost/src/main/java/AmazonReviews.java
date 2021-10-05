@@ -2,7 +2,6 @@ import com.google.gson.Gson;
 import cs601.project2.configuration.Constants;
 import cs601.project2.controllers.framework.implementation.SubscribeHandler;
 import cs601.project2.controllers.testApplication.ReviewListener;
-import cs601.project2.models.Review;
 import cs601.project2.utils.Strings;
 
 import java.io.IOException;
@@ -38,8 +37,8 @@ public class AmazonReviews {
     public void filterReviews() {
         RemoteBroker remoteBroker = new RemoteBroker();
 
-        SubscribeHandler<Review> oldReviewListener = null;
-        SubscribeHandler<Review> newReviewListener = null;
+        SubscribeHandler<String> oldReviewListener = null;
+        SubscribeHandler<String> newReviewListener = null;
 
         try {
             oldReviewListener = new ReviewListener(configuration.get("oldReviewsPath"), Constants.REVIEW_OPTION.OLD);

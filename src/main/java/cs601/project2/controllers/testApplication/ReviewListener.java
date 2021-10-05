@@ -1,8 +1,10 @@
 package cs601.project2.controllers.testApplication;
 
+import com.google.gson.Gson;
 import cs601.project2.configuration.Constants;
 import cs601.project2.controllers.framework.implementation.SubscribeHandler;
 import cs601.project2.models.Review;
+import cs601.project2.utils.Strings;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -17,7 +19,7 @@ import java.nio.file.Paths;
  *
  * @author Palak Jain
  */
-public class ReviewListener extends SubscribeHandler<Review> {
+public class ReviewListener extends SubscribeHandler<String> {
     private String fileLocation;
     private Constants.REVIEW_OPTION reviewOption;
     private BufferedWriter bufferedWriter;
@@ -36,20 +38,23 @@ public class ReviewListener extends SubscribeHandler<Review> {
     /**
      * Writing reviews based on whether it is a new or old review to a file.
      *
-     * @param review Review object to write to a file
+     * @param json json object to write to a file
      */
     @Override
-    public void onEvent(Review review) {
-        if(review == null) {
+    public void onEvent(String json) {
+        if(Strings.isNullOrEmpty(json)) {
             //If reviews object is null then return
             return;
         }
+
+        Gson gson = new Gson();
+        Review review = gson.fromJson(json, Review.class);
 
         if((reviewOption == Constants.REVIEW_OPTION.NEW && review.isNew()) ||
                 reviewOption == Constants.REVIEW_OPTION.OLD && review.isOld()) {
 
             try{
-                bufferedWriter.write(review.getJson());
+                bufferedWriter.write(json);
                 bufferedWriter.newLine();
             }
             catch (IOException ioException) {
