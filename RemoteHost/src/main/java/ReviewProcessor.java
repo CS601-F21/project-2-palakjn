@@ -1,13 +1,11 @@
-import com.google.gson.Gson;
 import cs601.project2.configuration.Constants;
 import cs601.project2.controllers.framework.implementation.SubscribeHandler;
+import cs601.project2.controllers.testApplication.JsonManager;
 import cs601.project2.controllers.testApplication.ReviewListener;
+import cs601.project2.models.Review;
 import cs601.project2.utils.Strings;
 
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.Reader;
-import java.io.StringWriter;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Map;
@@ -45,8 +43,8 @@ public class ReviewProcessor {
     public void filterReviews() {
         RemoteBroker remoteBroker = new RemoteBroker();
 
-        SubscribeHandler<String> oldReviewListener = null;
-        SubscribeHandler<String> newReviewListener = null;
+        SubscribeHandler<Review> oldReviewListener = null;
+        SubscribeHandler<Review> newReviewListener = null;
 
         try {
             oldReviewListener = new ReviewListener(configuration.get("oldReviewsPath"), Constants.REVIEW_OPTION.OLD);
@@ -129,10 +127,8 @@ public class ReviewProcessor {
      * @param configFileLocation location of configuration file
      */
     public void readConfig(String configFileLocation) {
-        try (Reader reader = Files.newBufferedReader(Paths.get(configFileLocation))){
-            Gson gson = new Gson();
-
-            configuration = gson.fromJson(reader, Map.class);
+        try (BufferedReader reader = Files.newBufferedReader(Paths.get(configFileLocation))){
+            configuration = JsonManager.fromJsonToMap(reader);
         }
         catch (IOException ioException) {
             StringWriter writer = new StringWriter();

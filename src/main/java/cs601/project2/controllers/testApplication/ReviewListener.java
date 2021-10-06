@@ -18,7 +18,7 @@ import java.nio.file.Paths;
  *
  * @author Palak Jain
  */
-public class ReviewListener extends SubscribeHandler<String> {
+public class ReviewListener extends SubscribeHandler<Review> {
     private String fileLocation;
     private Constants.REVIEW_OPTION reviewOption;
     private BufferedWriter bufferedWriter;
@@ -37,30 +37,24 @@ public class ReviewListener extends SubscribeHandler<String> {
     /**
      * Writing reviews based on whether it is a new or old review to a file.
      *
-     * @param json json object to write to a file
+     * @param review review object
      */
     @Override
-    public void onEvent(String json) {
-        if(Strings.isNullOrEmpty(json)) {
+    public void onEvent(Review review) {
+        if(review == null) {
             //If reviews object is null then return
             return;
         }
 
-        Review review = JsonManager.fromJson(json);
-
-        if(review != null &&
-                ((reviewOption == Constants.REVIEW_OPTION.NEW && review.isNew()) ||
-                    reviewOption == Constants.REVIEW_OPTION.OLD && review.isOld())) {
+        if((reviewOption == Constants.REVIEW_OPTION.NEW && review.isNew()) ||
+                reviewOption == Constants.REVIEW_OPTION.OLD && review.isOld()) {
 
             try{
-                bufferedWriter.write(json);
+                bufferedWriter.write(review.getJson());
                 bufferedWriter.newLine();
             }
             catch (IOException ioException) {
-                StringWriter writer = new StringWriter();
-                ioException.printStackTrace(new PrintWriter(writer));
-
-                System.out.printf("Unable to write to a file %s. %s\n", fileLocation, writer);
+                System.out.printf("Unable to write to a file %s. %s\n", fileLocation, ioException.getMessage());
             }
         }
     }

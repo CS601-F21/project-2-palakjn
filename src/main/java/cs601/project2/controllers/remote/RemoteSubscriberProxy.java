@@ -2,6 +2,7 @@ package cs601.project2.controllers.remote;
 
 import cs601.project2.configuration.Constants;
 import cs601.project2.controllers.framework.implementation.SubscribeHandler;
+import cs601.project2.models.Review;
 import cs601.project2.utils.Strings;
 
 import java.io.BufferedReader;
@@ -15,7 +16,7 @@ import java.net.Socket;
  *
  * @author Palak Jain
  */
-public class RemoteSubscriberProxy extends SubscribeHandler<String> {
+public class RemoteSubscriberProxy extends SubscribeHandler<Review> {
     private String ipAddress;
     private int port;
     private Socket socket;
@@ -29,10 +30,10 @@ public class RemoteSubscriberProxy extends SubscribeHandler<String> {
 
     /**
      * Send json file to remote subscriber
-     * @param json String in JSON format
+     * @param review Review Object
      */
     @Override
-    public synchronized void onEvent(String json) {
+    public synchronized void onEvent(Review review) {
         if(socket == null) {
             //Only making connection one time to the client
             connect();
@@ -40,7 +41,7 @@ public class RemoteSubscriberProxy extends SubscribeHandler<String> {
 
         if(socket != null && socket.isConnected()) {
             try  {
-                outStream.println(json);
+                outStream.println(review.getJson());
 
                 String line = inStream.readLine();
                 if (Strings.isNullOrEmpty(line) && line.equalsIgnoreCase(Constants.MESSAGES.RECEIVED)) {

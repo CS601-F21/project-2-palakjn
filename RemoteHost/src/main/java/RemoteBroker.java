@@ -1,5 +1,7 @@
 import cs601.project2.configuration.Constants;
 import cs601.project2.controllers.framework.implementation.SubscribeHandler;
+import cs601.project2.controllers.testApplication.JsonManager;
+import cs601.project2.models.Review;
 import cs601.project2.models.Subscribers;
 import cs601.project2.utils.Strings;
 
@@ -16,7 +18,7 @@ import java.net.Socket;
  * @author Palak Jain
  */
 public class RemoteBroker {
-    private Subscribers<String> subscribers;
+    private Subscribers<Review> subscribers;
     private volatile boolean isConnected;
     private ServerSocket serverSocket;
 
@@ -29,7 +31,7 @@ public class RemoteBroker {
      * Subscribe local Subscribers for future events.
      * @param subscriber Subscriber who wants to enroll
      */
-    public void subscribe(SubscribeHandler<String> subscriber) {
+    public void subscribe(SubscribeHandler<Review> subscriber) {
         subscribers.add(subscriber);
     }
 
@@ -109,17 +111,25 @@ public class RemoteBroker {
 
     /**
      * Publish review to all the subscribers.
-     *
-     * @param review String in JSON format
+     * @param json String in JSON format
      */
-    public void publish(String review)  {
+    public void publish(String json)  {
         int numOfSubscribers = subscribers.size();
 
-        for(int i = 0; i < numOfSubscribers; i++) {
-            SubscribeHandler<String> subscribeHandler = subscribers.get(i);
+        Review review = null;
+        if(numOfSubscribers != 0) {
+            review = JsonManager.fromJsonToReview(json);
+        }
 
-            if(subscribeHandler != null) {
-                subscribeHandler.onEvent(review);
+        if(review != null) {
+            review.setJson(json);
+
+            for (int i = 0; i < numOfSubscribers; i++) {
+                SubscribeHandler<Review> subscribeHandler = subscribers.get(i);
+
+                if (subscribeHandler != null) {
+                    subscribeHandler.onEvent(review);
+                }
             }
         }
     }

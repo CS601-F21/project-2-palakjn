@@ -1,18 +1,16 @@
 package cs601.project2;
 
-import com.google.gson.Gson;
 import cs601.project2.configuration.Config;
 import cs601.project2.configuration.Constants;
 import cs601.project2.controllers.framework.implementation.*;
 import cs601.project2.controllers.remote.RemoteConnectionServer;
+import cs601.project2.controllers.testApplication.JsonManager;
 import cs601.project2.controllers.testApplication.ReviewListener;
 import cs601.project2.controllers.testApplication.Reviewer;
+import cs601.project2.models.Review;
 import cs601.project2.utils.Strings;
 
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.Reader;
-import java.io.StringWriter;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
@@ -52,14 +50,14 @@ public class AmazonReviews {
      * Creates subscribers and filter reviews by Unix Timestamp
      */
     public void processReviews() {
-        BrokerHandler<String> reviewManager = getBroker();
+        BrokerHandler<Review> reviewManager = getBroker();
 
         if(reviewManager != null) {
 
             try {
                 //Creating two subscribers
-                SubscribeHandler<String> oldReviewListener = new ReviewListener(configuration.getOldReviewsPath(), Constants.REVIEW_OPTION.OLD);
-                SubscribeHandler<String> newReviewListener = new ReviewListener(configuration.getNewReviewsPath(), Constants.REVIEW_OPTION.NEW);
+                SubscribeHandler<Review> oldReviewListener = new ReviewListener(configuration.getOldReviewsPath(), Constants.REVIEW_OPTION.OLD);
+                SubscribeHandler<Review> newReviewListener = new ReviewListener(configuration.getNewReviewsPath(), Constants.REVIEW_OPTION.NEW);
 
                 //Subscribes both subscribers
                 reviewManager.subscribe(oldReviewListener);
@@ -104,7 +102,7 @@ public class AmazonReviews {
      * Spawns two threads to read reviews from file and publish to all subscribers.
      * @param reviewManager Broker object to use for publishing reviews.
      */
-    public void filterReviewsByUnix(BrokerHandler<String> reviewManager) {
+    public void filterReviewsByUnix(BrokerHandler<Review> reviewManager) {
         //Creating two publishers
         Reviewer appliancesReviewer = new Reviewer(configuration.getAppliancesDatasetPath(), reviewManager);
         Reviewer appsReviewer = new Reviewer(configuration.getAppsDatasetPath(), reviewManager);
@@ -156,10 +154,8 @@ public class AmazonReviews {
      * @param configFileLocation location of configuration file
      */
     public void readConfig(String configFileLocation) {
-        try (Reader reader = Files.newBufferedReader(Paths.get(configFileLocation))){
-            Gson gson = new Gson();
-
-            configuration = gson.fromJson(reader, Config.class);
+        try (BufferedReader reader = Files.newBufferedReader(Paths.get(configFileLocation))){
+            configuration = JsonManager.fromJsonToConfig(reader);
         }
         catch (IOException ioException) {
             StringWriter writer = new StringWriter();
@@ -211,7 +207,7 @@ public class AmazonReviews {
      * Get specific broker object based on the configuration file
      * @return Broker object
      */
-    public BrokerHandler<String> getBroker() {
+    public BrokerHandler<Review> getBroker() {
         if(configuration.getBroker() == Constants.BROKER_OPTION.SYNCHRONIZED_ORDERED) {
             return new SynchronousOrderedBrokerHandler<>();
         }

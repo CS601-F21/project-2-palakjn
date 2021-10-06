@@ -3,6 +3,7 @@ package cs601.project2.controllers.remote;
 import cs601.project2.configuration.Constants;
 import cs601.project2.controllers.framework.implementation.BrokerHandler;
 import cs601.project2.controllers.framework.implementation.SubscribeHandler;
+import cs601.project2.models.Review;
 import cs601.project2.utils.Strings;
 
 import java.io.*;
@@ -20,11 +21,11 @@ import java.util.List;
 public class RemoteConnectionServer {
     private volatile boolean running;
     private List<String> clients;
-    private BrokerHandler<String> reviewManager;
+    private BrokerHandler<Review> reviewManager;
     private Socket remoteConnectionListener;
     private ServerSocket serverSocket = null;
 
-    public RemoteConnectionServer(BrokerHandler<String> reviewManager) {
+    public RemoteConnectionServer(BrokerHandler<Review> reviewManager) {
         running = true;
         clients = new ArrayList<>();
         this.reviewManager = reviewManager;
@@ -75,7 +76,7 @@ public class RemoteConnectionServer {
                     clients.add(ipAddress);
 
                     //Creating a local subscriber object
-                    SubscribeHandler<String> subscriberProxy = new RemoteSubscriberProxy(ipAddress, Integer.parseInt(port));
+                    SubscribeHandler<Review> subscriberProxy = new RemoteSubscriberProxy(ipAddress, Integer.parseInt(port));
 
                     //Subscribe the subscriber to the broker
                     reviewManager.subscribe(subscriberProxy);
@@ -136,9 +137,11 @@ public class RemoteConnectionServer {
         try {
             //After closing the socket, thread will wake up from the socket.accept() call and then will exit the loop
             serverSocket.close();
-            remoteConnectionListener.close();
-        }
-        catch (IOException ioException) {
+            if(remoteConnectionListener != null) {
+                //When there is no remote host, then socket will be null.
+                remoteConnectionListener.close();
+            }
+        } catch (IOException ioException) {
             System.out.printf("Error while closing the remote connection. %s.\n", ioException);
         }
 
