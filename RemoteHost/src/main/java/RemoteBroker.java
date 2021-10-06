@@ -20,7 +20,7 @@ import java.net.Socket;
 public class RemoteBroker {
     private Subscribers<Review> subscribers;
     private volatile boolean isConnected;
-    private ServerSocket serverSocket;
+    private ServerSocket eventServerSocket;
 
     public RemoteBroker() {
         subscribers = new Subscribers<>();
@@ -44,11 +44,11 @@ public class RemoteBroker {
             //Making a connection with server listening if not done before
 
             try (
-                    Socket socket = new Socket(Constants.IPADDRESS, Constants.CONNECTION_PORT);
-                    PrintWriter outStream = new PrintWriter(socket.getOutputStream(), true);
-                    BufferedReader inStream = new BufferedReader(new InputStreamReader(socket.getInputStream()))
+                Socket socket = new Socket(Constants.IPADDRESS, Constants.CONNECTION_PORT);
+                PrintWriter outStream = new PrintWriter(socket.getOutputStream(), true);
+                BufferedReader inStream = new BufferedReader(new InputStreamReader(socket.getInputStream()))
             ) {
-                //Sending request like "Subscribe localhost 3032"
+                //Sending request like "Subscribe localhost 3034"
                 outStream.println(String.format("%s %s %d", Constants.MESSAGES.SUBSCRIBE_REQUEST, Constants.IPADDRESS, Constants.MESSAGE_PORT));
                 String line = inStream.readLine();
 
@@ -73,16 +73,16 @@ public class RemoteBroker {
      */
     public void publish() {
         try {
-            serverSocket = new ServerSocket(Constants.MESSAGE_PORT);
+            eventServerSocket = new ServerSocket(Constants.MESSAGE_PORT);
         } catch (IOException ioException) {
             System.out.printf("Exception while creating server socket for accepting events from remote. %s", ioException);
             return;
         }
 
         try (
-            Socket remoteListener = serverSocket.accept();
-            BufferedReader inStream = new BufferedReader(new InputStreamReader(remoteListener.getInputStream()));
-            PrintWriter outStream = new PrintWriter(remoteListener.getOutputStream(), true)
+                Socket remoteListener = eventServerSocket.accept();
+                BufferedReader inStream = new BufferedReader(new InputStreamReader(remoteListener.getInputStream()));
+                PrintWriter outStream = new PrintWriter(remoteListener.getOutputStream(), true)
             ){
 
             //Until the connection is stable, waiting for events
@@ -143,7 +143,7 @@ public class RemoteBroker {
         try {
             serverSocket = new ServerSocket(Constants.DISCONNECTION_PORT);
         } catch (IOException ioException) {
-            System.out.printf("Exception while creating server socket for accepting events from remote. %s", ioException);
+            System.out.printf("Exception while creating server socket for closing connection with remote. %s", ioException);
             return;
         }
 
@@ -158,8 +158,8 @@ public class RemoteBroker {
             if(!Strings.isNullOrEmpty(line) && line.trim().equalsIgnoreCase(Constants.MESSAGES.CLOSE_REQUEST)) {
                 outStream.println(Constants.MESSAGES.CLOSE_RESPONSE);
                 isConnected = false;
-                if(this.serverSocket != null) {
-                    this.serverSocket.close();
+                if(this.eventServerSocket != null) {
+                    this.eventServerSocket.close();
                 }
             }
             else {

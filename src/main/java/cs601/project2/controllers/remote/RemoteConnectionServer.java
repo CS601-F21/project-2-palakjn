@@ -119,6 +119,10 @@ public class RemoteConnectionServer {
             if(reqParts.length != 3 || !reqParts[0].equalsIgnoreCase(Constants.MESSAGES.SUBSCRIBE_REQUEST)) {
                 System.out.printf("Invalid request. %s.\n", request);
             }
+            else if(clients.contains(reqParts[1]))
+            {
+                System.out.printf("Ip address: %s already linked to the server. Try on another host.", reqParts[1]);
+            }
             else {
                 isValid = true;
             }
